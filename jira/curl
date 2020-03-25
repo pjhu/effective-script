@@ -1,0 +1,116 @@
+# JIRA
+
+### 参考文档
+https://docs.xxxssian.com/jira/REST/cloud/
+https://developer.xxxssian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-edit-issues
+
+### 获取cookie
+curl -D cookie -d '{ "username": "admin", "password": "123456" }' -X POST -H "Content-Type: application/json" http://192.168.45.91:8080/rest/auth/1/session
+
+### 获取user key
+curl -b cookie -X GET 'http://192.168.45.91:8080/rest/api/2/user?username=admin&pretty' |  python -m json.tool
+
+### 获取权限
+curl -b cookie -X GET 'http://192.168.45.91:8080/rest/api/2/permissions' |  python -m json.tool
+
+### 查找用户
+curl -b cookie -X GET 'http://192.168.45.91:8080/rest/api/2/groups/picker?userName=admin' | python -m json.tool
+
+### 获取projects ID/KEY(或者从JIRA页面查看KEY值)
+curl -b cookie -X GET 'http://192.168.45.91:8080/rest/api/2/project' | python -m json.tool
+
+### 获取project
+curl -b cookie -X GET 'http://192.168.45.91:8080/rest/api/2/project/10000' | python -m json.tool
+
+### 搜索issue
+curl -b cookie -X POST -H "Content-Type: application/json" --data '{"jql": "status[name]=\"In Progress\"", "fields":["id","key","status", "customfield_10007", "labels"]}' 'http://192.168.45.91:8080/rest/api/2/search' | python -m json.tool
+
+https://developer.xxxssian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-query-issues
+
+### 获取issue
+curl -b cookie -X GET 'http://192.168.45.91:8080/rest/api/2/issue/10000' | python -m json.tool
+
+### 获取所有issue状态
+curl -b cookie -X GET 'http://192.168.45.91:8080/rest/api/2/status' | python -m json.tool
+"To Do"， "In Progress"， "Done"
+"Open"， "In Progress"， "Under Review"， "Approved"， "DONE"， "Cancelled"， "Rejected"
+
+### 更新issue状态
+curl -b cookie -X POST -H "Content-Type: application/json"  -d '{"transition":{"id":"11"}}' 'http://192.168.45.91:8080/rest/api/2/issue/10000/transitions?expand=transitions.fields' | python -m json.tool
+curl -b cookie -X GET -H "Content-Type: application/json" 'http://192.168.45.91:8080/rest/api/2/issue/10000/transitions' | python -m json.tool
+
+
+### 添加comments
+curl -b cookie -X POST -d {see below} -H "Content-Type: application/json" 'http://192.168.45.91:8080/rest/api/2/issue/BAIS-1/comment'
+curl -b cookie -X POST -d @json_file -H "Content-Type: application/json" 'http://192.168.45.91:8080/rest/api/2/issue/BAIS-1/comment'
+
+{
+    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eget venenatis elit. Duis eu justo eget augue iaculis fermentum. Sed semper quam laoreet nisi egestas at posuere augue semper.",
+    "visibility": {
+        "type": "role",
+        "value": "Administrators"
+    }
+}
+
+
+# Zabbix
+
+### 获取zabbix API 版本
+curl -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"apiinfo.version","id":1,"auth":null,"params":{}}' 'http://localhost:10080/zabbix/api_jsonrpc.php'
+
+### login
+curl -X POST -H "Content-Type: application/json" -d @data.json 'http://localhost:10080/zabbix/api_jsonrpc.php'
+{
+    "jsonrpc": "2.0",
+    "method": "user.login",
+    "params": {
+        "user": "Admin",
+        "password": "zabbix",
+        "userData": true
+    },
+    "id": 1,
+    "auth": null
+}
+
+### 获取hosts
+curl -X POST -H "Content-Type: application/json" -d @data.json 'http://localhost:10080/zabbix/api_jsonrpc.php'
+{
+    "jsonrpc": "2.0",
+    "method": "host.get",
+    "params": {
+        "output": [
+            "hostid",
+            "host"
+        ],
+        "selectInterfaces": [
+            "interfaceid",
+            "ip"
+        ]
+    },
+    "id": 2,
+    "auth": "c8b717ab39f061b22121da837c843e4a"
+}
+
+# Foreman
+
+### 获取hosts
+curl -k -u admin:123456 -H "Accept: version=2,application/json" http://localhost:13000/api/domains
+curl -k -u admin:123456 -H "Accept: version=2,application/json" https://172.31.61.81/api/hosts?search='facts.kfcjboss_app=true+and+facts.is_in_place=true'
+
+### 获取host 属性
+curl -k -u admin:123456 -H "Accept: version=2,application/json" https://foreman.example.com/api/hosts/1 | python -m json.tool
+
+### 获取puppet classes
+curl -k -u admin:123456 -H "Accept: version=2,application/json" https://foreman.example.com/api/puppetclasses | python -m json.tool
+
+### 更新host puppet classes_ids
+curl -k -u admin:123456 -H "Accept: version=2,application/json" -H "Content-Type: application/json" -X PUT -d '{ "puppetclass_ids": [1,6,7] }' https://foreman.example.com/api/hosts/1
+
+### 更新host puppet classes_names
+curl -k -u admin:123456 -H "Accept: version=2,application/json" -H "Content-Type: application/json" -X PUT -d '{ "puppetclass_names": ["ntp","stdlib","stdlib::stages","ntp::config"] }' https://foreman.example.com/api/hosts/1
+
+### 更新classes_name & comment
+curl -k -u admin:123456 -H "Accept: version=2,application/json" -H "Content-Type: application/json" -X PUT -d '{ "puppetclass_names": ["ntp","stdlib","stdlib::stages"], "comment":"BAIS-1" }' https://foreman.example.com/api/hosts/agent.example.com
+
+### 获取reports
+curl -k -u admin:123456 -H "Accept: version=2,application/json" -X GET https://foreman.example.com/api/hosts/agent.example.com/reports/last
